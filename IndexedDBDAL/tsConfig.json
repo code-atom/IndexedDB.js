@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "system",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "outFile": "../build/indexedDB.js",
+        "lib": [
+            "es2015",
+            "dom"
+        ]
+    },
+    "includes": [
+        "./Contract/*",
+        "./Helpers/*",
+        "./Repositories/*",
+        "*"
+    ]
+}

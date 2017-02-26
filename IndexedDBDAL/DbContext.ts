@@ -1,22 +1,23 @@
-import * as Helpers from "./Helpers/Util";
-import * as DbContext from "./Contract/IDbContext";
-export namespace IndexedDb {
-    export abstract class DbContext implements DbContext.IndexedDb.IDBContext {
+/// <reference path="./Contract/IDbContext.ts" />
+/// <reference path="./Helpers/Util.ts" />
+
+namespace IndexedDB {
+    export abstract class DbContext implements IDBContext {
         private _dbNative: IDBFactory;
         constructor(databaseNative: IDBFactory, public dbName?: string) {
             this._dbNative = databaseNative;
             this.dbName = this.dbName || 'SampleDB';
             this.Begin();
         }
-        
+
         public Begin(): Promise<any> {
             var self = this;
             var creationRequest = self._dbNative.open(this.dbName);
-            var promise = Helpers.IndexedDb.Helpers.Util.CreatePromise();
+            var promise = Util.CreatePromise();
             creationRequest.onsuccess = function (event: any) {
                 promise.resolve(event.target.result);
             }
-            
+
             creationRequest.onupgradeneeded = function (event: any) {
                 var db = event.target.result as IDBDatabase;
                 self.ModelBuilding(db);
@@ -31,19 +32,19 @@ export namespace IndexedDb {
             return this.Begin()
                 .then(function (db: IDBDatabase) {
                     db.close();
-                    var promise = Helpers.IndexedDb.Helpers.Util.CreatePromise();
+                    var promise = Util.CreatePromise();
                     var req = self._dbNative.deleteDatabase(self.dbName);
                     req.onsuccess = function () {
                         promise.resolve();
-                        Helpers.IndexedDb.Helpers.Util.Log("Deleted database successfully");
+                        Util.Log("Deleted database successfully");
                     };
                     req.onerror = function () {
                         promise.reject();
-                        Helpers.IndexedDb.Helpers.Util.Log("Couldn't delete database");
+                        Util.Log("Couldn't delete database");
                     };
                     req.onblocked = function () {
                         promise.reject();
-                        Helpers.IndexedDb.Helpers.Util.Log("Couldn't delete database due to the operation being blocked");
+                        Util.Log("Couldn't delete database due to the operation being blocked");
                     };
                     return promise;
                 });
@@ -62,6 +63,6 @@ export namespace IndexedDb {
                 });
         }
 
-        protected abstract ModelBuilding(databse :IDBDatabase);
+        protected abstract ModelBuilding(databse: IDBDatabase): void;
     }
 }

@@ -1,4 +1,4 @@
-export namespace IndexedDb.Helpers {
+namespace IndexedDB {
     export class Util {
         static CreatePromise(): any {
             var promiseHandler = <IPromiseHandler>{};
