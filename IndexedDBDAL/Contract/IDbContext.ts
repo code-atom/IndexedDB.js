@@ -7,7 +7,13 @@ namespace IndexedDB {
     }
     export interface IModelConfig {
         name: string,
-        keyPath: any,
-        autoIncrement : any
+        keyPath: string,
+        autoIncrement : any,
+        indexes? : IIndexConfig[]
+    }
+    export interface IIndexConfig{
+        name :string ;
+        keyPath: string,
+        options: any
     }
 }

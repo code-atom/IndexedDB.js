@@ -5,11 +5,18 @@ namespace IndexedDB {
     export abstract class DbContext implements IDBContext {
         private _dbNative: IDBFactory;
         private _version = 1;
+        private _DBPromise: Promise<any>;
         constructor(databaseNative: IDBFactory, public dbName?: string) {
             this._dbNative = databaseNative;
             this.dbName = this.dbName || 'SampleDB';
         }
         public Begin = function () {
+            if (!this._DBPromise) {
+                this._DBPromise = this.begin();
+            }
+            return this._DBPromise;
+        }
+        public begin = function () {
             var self = this;
             var creationRequest = self._dbNative.open(this.dbName, this.Upgrade != undefined ? this.Upgrade.Version : this._version);
             var promise = Util.CreatePromise();
@@ -28,9 +35,9 @@ namespace IndexedDB {
                     self.Upgrade.UpgradeSetting.call(self, db);
                 }
             }
-            creationRequest.onerror = () => {
+            creationRequest.onerror = (event: any) => {
                 Util.Log('Error while opening the database');
-                promise.reject();
+                promise.reject(event);
             }
 
             return promise;
@@ -65,11 +72,17 @@ namespace IndexedDB {
 
         public CreateObjectSet(databse: IDBDatabase, model: IModelConfig): void {
             if (!databse.objectStoreNames.contains(model.name)) {
-                var idbOSConf ={ keyPath: model.keyPath, autoIncrement: true };
+                var idbOSConf = { keyPath: model.keyPath, autoIncrement: true };
                 if (typeof model.autoIncrement !== 'undefined') {
                     idbOSConf.autoIncrement = model.autoIncrement;
                 }
-                databse.createObjectStore(model.name, idbOSConf);
+                var os = databse.createObjectStore(model.name, idbOSConf);
+
+                if ((typeof model.indexes !== 'undefined') && (model.indexes.length > 0)) {
+                    for (var i = 0; i < model.indexes.length; i++) {
+                        os.createIndex(model.indexes[i].name, model.indexes[i].keyPath, model.indexes[i].options);
+                    }
+                }
             }
         }
 

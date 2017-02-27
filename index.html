@@ -6,6 +6,7 @@
     <style type="text/css">
 
     </style>
+    <!--https://github.com/jaqmol/proto-db-->
     <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
         crossorigin="anonymous"></script>
         <script src="./build/indexedDB.js"></script>
@@ -53,11 +54,11 @@
                 repository: (function () {
                     var contextContainer = new IndexedDB.SampleContext(dbConnection);
                     contextContainer.Upgrade = {
-                        Version: 3,
+                        Version: 4,
                         UpgradeSetting: function (db) {
                             this.CreateObjectSet(db, { name: "Sample5", keyPath: "id", autoIncrement: true });
                             this.CreateObjectSet(db, { name: "Sample6", keyPath: "id", autoIncrement: true });
-                            this.CreateObjectSet(db, { name: "Sample7", keyPath: "id", autoIncrement: true });
+                            this.CreateObjectSet(db, { name: "Sample9", keyPath: "id", autoIncrement: true });
                         }
                     };
                     console.log(contextContainer);

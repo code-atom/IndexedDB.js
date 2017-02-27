@@ -35,6 +35,12 @@ var IndexedDB;
             this.dbName = dbName;
             this._version = 1;
             this.Begin = function () {
+                if (!this._DBPromise) {
+                    this._DBPromise = this.begin();
+                }
+                return this._DBPromise;
+            };
+            this.begin = function () {
                 var self = this;
                 var creationRequest = self._dbNative.open(this.dbName, this.Upgrade != undefined ? this.Upgrade.Version : this._version);
                 var promise = IndexedDB.Util.CreatePromise();
@@ -51,9 +57,9 @@ var IndexedDB;
                         self.Upgrade.UpgradeSetting.call(self, db);
                     }
                 };
-                creationRequest.onerror = function () {
+                creationRequest.onerror = function (event) {
                     IndexedDB.Util.Log('Error while opening the database');
-                    promise.reject();
+                    promise.reject(event);
                 };
                 return promise;
             };
