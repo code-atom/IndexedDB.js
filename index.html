@@ -4,12 +4,11 @@
 <head>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <style type="text/css">
-        .main-container {
 
-        }
     </style>
-<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
-    crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
+        crossorigin="anonymous"></script>
+        <script src="./build/indexedDB.js"></script>
 </head>
 
 <body>
@@ -41,154 +40,82 @@
     <script id="listTemplate" type="text/template">
         <li>
             <div class="checkbox">
-            <label>
+                <label>
                 <input type="checkbox" value="">
                 {{Text}} {{CreatedAt}}
             </label>
             </div>
-        <li>
+            <li>
     </script>
-<script type="text/javascript">
-    (function (dbConnection) {
-        var model = {
-            db: null,
-            id: 0,
-            initDb: function () {
-                return new Promise(function (resolve, reject) {
-                    var creationRequest = dbConnection.open('todolist', 1);
-                    if (creationRequest.readyState === 'done') {
-                        model.db = creationRequest.result;
-                        resolve(model.db);
-                        return;
-                    }
-
-                    creationRequest.onsuccess = function (event) {
-                        var db = event.target.result;
-                        model.db = db
-                        resolve(model.db);
-                    };
-
-                    creationRequest.onerror = function (event) {
-                        console.log(event);
-                        reject();
-                    };
-
-                    creationRequest.onupgradeneeded = function (event) {
-                        const employeeData = [
-                            { id: Date.now(), name: "gopal" },
-                            { id: Date.now(), name: "prasad" }
-                        ];
-                        var db = event.target.result;
-                        db.createObjectStore("task", { keyPath: "id" });
-                    }
-                });
-            },
-            add: function (data) {
-                return new Promise(function (resolve, reject) {
-                    var request = model.db.transaction(["task"], "readwrite")
-                        .objectStore("task")
-                        .add({ id: Date.now(), name: data });
-                    request.onerror = function (event) {
-                        console.log(event);
-                        reject(event);
-                    };
-                    request.onsuccess = function (event) {
-                        resolve(request.result);
-                    };
-                })
-            },
-            readAll: function () {
-                return new Promise(function (resolve, reject) {
-                    var data = [];
-                    var transaction = model.db.transaction("task");
-                    var objectStore = transaction.objectStore("task");
-                    objectStore.openCursor().onsuccess = function (event) {
-                        var cursor = event.target.result;
-                        if (cursor) {
-                            data.push(cursor.value);
-                            cursor.continue()
+    <script type="text/javascript">
+        (function (dbConnection) {
+            var model = {
+                repository: (function () {
+                    var contextContainer = new IndexedDB.SampleContext(dbConnection);
+                    contextContainer.Upgrade = {
+                        Version: 3,
+                        UpgradeSetting: function (db) {
+                            this.CreateObjectSet(db, { name: "Sample5", keyPath: "id", autoIncrement: true });
+                            this.CreateObjectSet(db, { name: "Sample6", keyPath: "id", autoIncrement: true });
+                            this.CreateObjectSet(db, { name: "Sample7", keyPath: "id", autoIncrement: true });
                         }
-                    }
-                    transaction.oncomplete = function (event) {
-                        resolve(data);
                     };
-
-                })
-            },
-            remove: function (id) {
-                return new Promise(function (resolve, reject) {
-                    var request = model.db.transaction(["task"], "readwrite")
-                        .objectStore("task")
-                        .delete(id);
-                    request.onsuccess = function (event) {
-                        resolve();
-                    };
-                });
-            }
-        };
-        var controller = {
-            init: function () {
-                model.initDb().then(function (db) {
-                    controller.DbInstance = db;
+                    console.log(contextContainer);
+                    return new IndexedDB.SampleRepository(contextContainer);
+                })()
+            };
+            var controller = {
+                init: function () {
                     view.init();
-                }, function () {
-                    alert('Error while creating database');
-                });
-            },
-            add: function (data) {
-                model.add(data).then(function () {
-                    controller.readAll();
-                }, function () {
-                    alert('asdfas');
-                });
-            },
-            readAll: function () {
-                model.readAll().then(function (data) {
-                    view.render(data);
-                });
+                },
+                add: function (data) {
+                    model.repository.Add(data).then(controller.readAll, function () {
+                        alert('asdfas');
+                    });
+                },
+                readAll: function () {
+                    model.repository.GetAll().then(view.render);
 
-            },
-            remove: function (id) {
-                model.remove(id).then(function () {
-                    controller.readAll();
-                });
-            }
-        };
+                },
+                remove: function (id) {
+                    model.repository.Delete(id).then(controller.readAll);
+                }
+            };
 
-        var view = {
-            init: function () {
-                this.$container = $('#task-container');
-                $('#load').click(function () {
-                    controller.readAll();
-                })
-                $('#add').click(function () {
-                    var val = $('#val').val();
-                    controller.add(val);
-                    $('#val').val("");
-                });
-                controller.readAll();
-            },
-            render: function (data) {
-                $(this.$container).html('');
-                for (var d of data) {
-                    var li = $(document.createElement('li'));
-                    li.attr('id', d.id);
-                    li.addClass('list-group-item')
-                    li.text(d.name);
-                    li.click(function () {
-                        controller.remove(d.id);
+            var view = {
+                init: function () {
+                    this.$container = $('#task-container');
+                    $('#load').click(function () {
+                        controller.readAll();
                     })
-                    var li = $(this.$container).append(li);
+                    $('#add').click(function () {
+                        var val = $('#val').val();
+                        var obj = { id: Date.now(), value: val };
+                        controller.add(obj);
+                        $('#val').val("");
+                    });
+                    controller.readAll();
+                },
+                render: function (data) {
+                    $(view.$container).html('');
+                    for (var d of data) {
+                        var li = $(document.createElement('li'));
+                        li.attr('id', d.id);
+                        li.addClass('list-group-item')
+                        li.text(d.value);
+                        li.click(function () {
+                            controller.remove(d.id);
+                        })
+                        var li = $(view.$container).append(li);
+                    }
                 }
             }
-        }
 
-
-        document.addEventListener('DOMContentLoaded', function () {
-            controller.init();
-        })
-    } (window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB));
-</script>
+            document.addEventListener('DOMContentLoaded', function () {
+                controller.init();
+            })
+        } (window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB));
+    </script>
 </body>
 
 </html>

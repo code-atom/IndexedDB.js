@@ -4,16 +4,19 @@
 namespace IndexedDB {
     export abstract class DbContext implements IDBContext {
         private _dbNative: IDBFactory;
+        private _version = 1;
         constructor(databaseNative: IDBFactory, public dbName?: string) {
             this._dbNative = databaseNative;
             this.dbName = this.dbName || 'SampleDB';
-            this.Begin();
         }
-
-        public Begin(): Promise<any> {
+        public Begin = function () {
             var self = this;
-            var creationRequest = self._dbNative.open(this.dbName);
+            var creationRequest = self._dbNative.open(this.dbName, this.Upgrade != undefined ? this.Upgrade.Version : this._version);
             var promise = Util.CreatePromise();
+            if (creationRequest.readyState === "done") {
+                promise.resolve(creationRequest.result);
+            }
+
             creationRequest.onsuccess = function (event: any) {
                 promise.resolve(event.target.result);
             }
@@ -21,7 +24,13 @@ namespace IndexedDB {
             creationRequest.onupgradeneeded = function (event: any) {
                 var db = event.target.result as IDBDatabase;
                 self.ModelBuilding(db);
-                promise.resolve(db);
+                if (self.Upgrade) {
+                    self.Upgrade.UpgradeSetting.call(self, db);
+                }
+            }
+            creationRequest.onerror = () => {
+                Util.Log('Error while opening the database');
+                promise.reject();
             }
 
             return promise;
@@ -54,15 +63,19 @@ namespace IndexedDB {
             return this.Delete().then(this.Begin);
         }
 
-        public CreateObjectSet(model: string): Promise<IDBObjectStore> {
-            var self = this;
-            return this.Begin()
-                .then(function (db: IDBDatabase) {
-                    var dbStoreReq = db.createObjectStore(model);
-                    return dbStoreReq;
-                });
+        public CreateObjectSet(databse: IDBDatabase, model: IModelConfig): void {
+            if (!databse.objectStoreNames.contains(model.name)) {
+                var idbOSConf ={ keyPath: model.keyPath, autoIncrement: true };
+                if (typeof model.autoIncrement !== 'undefined') {
+                    idbOSConf.autoIncrement = model.autoIncrement;
+                }
+                databse.createObjectStore(model.name, idbOSConf);
+            }
         }
 
         protected abstract ModelBuilding(databse: IDBDatabase): void;
+
+        public Upgrade: IDBUpgradeConfiguration;
+
     }
 }

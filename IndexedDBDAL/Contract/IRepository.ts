@@ -1,5 +1,5 @@
 namespace IndexedDB {
-    export interface IRepository<TObjectStore extends IDBObjectStore, TKey extends any> {
+    export interface IRepository<TDBContext extends IDBContext, TKey extends any> {
         Add(TObject: any): Promise<any>;
         Update(TObject: any): Promise<any>;
         Delete(TKey: any): Promise<any>;
