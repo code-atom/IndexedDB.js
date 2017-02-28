@@ -1,5 +1,6 @@
 namespace IndexedDB {
     export class Util {
+        static enableDebug: boolean = true;
         static CreatePromise(): any {
             var promiseHandler = <IPromiseHandler>{};
             var promise = new Promise(function (resolve, reject) {
@@ -9,7 +10,8 @@ namespace IndexedDB {
             return Object.assign(promise, promiseHandler);
         }
         static Log(ex: any): void {
-            console.log(ex);
+            if (Util.enableDebug)
+                console.log(ex);
         }
     }
     export interface IPromiseHandler {

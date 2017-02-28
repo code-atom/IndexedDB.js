@@ -2,7 +2,7 @@
 /// <reference path="./Helpers/Util.ts" />
 
 namespace IndexedDB {
-    export abstract class DbContext implements IDBContext {
+    export class DbContext implements IDBContext {
         private _dbNative: IDBFactory;
         private _version = 1;
         private _DBPromise: Promise<any>;
@@ -30,7 +30,9 @@ namespace IndexedDB {
 
             creationRequest.onupgradeneeded = function (event: any) {
                 var db = event.target.result as IDBDatabase;
-                self.ModelBuilding(db);
+                if (self.ModelBuilding) {
+                    self.ModelBuilding(db);
+                }
                 if (self.Upgrade) {
                     self.Upgrade.UpgradeSetting.call(self, db);
                 }
@@ -83,12 +85,13 @@ namespace IndexedDB {
                         os.createIndex(model.indexes[i].name, model.indexes[i].keyPath, model.indexes[i].options);
                     }
                 }
+            } else {
+
             }
         }
 
-        protected abstract ModelBuilding(databse: IDBDatabase): void;
+        public ModelBuilding: (databse: IDBDatabase) => void;
 
         public Upgrade: IDBUpgradeConfiguration;
-
     }
 }

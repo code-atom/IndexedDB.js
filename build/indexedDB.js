@@ -1,13 +1,3 @@
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var IndexedDB;
 (function (IndexedDB) {
     var Util = (function () {
@@ -22,10 +12,12 @@ var IndexedDB;
             return Object.assign(promise, promiseHandler);
         };
         Util.Log = function (ex) {
-            console.log(ex);
+            if (Util.enableDebug)
+                console.log(ex);
         };
         return Util;
     }());
+    Util.enableDebug = true;
     IndexedDB.Util = Util;
 })(IndexedDB || (IndexedDB = {}));
 var IndexedDB;
@@ -52,7 +44,9 @@ var IndexedDB;
                 };
                 creationRequest.onupgradeneeded = function (event) {
                     var db = event.target.result;
-                    self.ModelBuilding(db);
+                    if (self.ModelBuilding) {
+                        self.ModelBuilding(db);
+                    }
                     if (self.Upgrade) {
                         self.Upgrade.UpgradeSetting.call(self, db);
                     }
@@ -97,7 +91,14 @@ var IndexedDB;
                 if (typeof model.autoIncrement !== 'undefined') {
                     idbOSConf.autoIncrement = model.autoIncrement;
                 }
-                databse.createObjectStore(model.name, idbOSConf);
+                var os = databse.createObjectStore(model.name, idbOSConf);
+                if ((typeof model.indexes !== 'undefined') && (model.indexes.length > 0)) {
+                    for (var i = 0; i < model.indexes.length; i++) {
+                        os.createIndex(model.indexes[i].name, model.indexes[i].keyPath, model.indexes[i].options);
+                    }
+                }
+            }
+            else {
             }
         };
         return DbContext;
@@ -106,56 +107,66 @@ var IndexedDB;
 })(IndexedDB || (IndexedDB = {}));
 var IndexedDB;
 (function (IndexedDB) {
-    var SampleContext = (function (_super) {
-        __extends(SampleContext, _super);
-        function SampleContext(_dbNative) {
-            return _super.call(this, _dbNative, "SampleContext") || this;
+    var DbContextBuilder = (function () {
+        function DbContextBuilder(_dbNative) {
+            this._dbNative = _dbNative;
+            this._models = [];
+            this._isCreated = false;
         }
-        SampleContext.prototype.ModelBuilding = function (database) {
-            this.CreateObjectSet(database, { name: "Sample1", keyPath: "id", autoIncrement: true });
-            this.CreateObjectSet(database, { name: "Sample2", keyPath: "id", autoIncrement: true });
-            this.CreateObjectSet(database, { name: "Sample3", keyPath: "id", autoIncrement: true });
-            this.CreateObjectSet(database, { name: "Sample4", keyPath: "id", autoIncrement: true });
+        DbContextBuilder.prototype.CreateDB = function (dbName) {
+            this._dbName = dbName;
+            return this;
         };
-        return SampleContext;
-    }(IndexedDB.DbContext));
-    IndexedDB.SampleContext = SampleContext;
-})(IndexedDB || (IndexedDB = {}));
-var IndexedDB;
-(function (IndexedDB) {
-    var DbContextConatiner = (function () {
-        function DbContextConatiner(databaseNative) {
-            this._context = new IndexedDB.SampleContext(databaseNative);
-        }
-        DbContextConatiner.prototype.Get = function () {
-            return this._context;
+        DbContextBuilder.prototype.ConfigureModel = function (model) {
+            if (model === undefined || model === null)
+                throw new Error('Please mention model detail');
+            this._models.push(model);
+            return this;
         };
-        return DbContextConatiner;
+        DbContextBuilder.prototype.UpgradeConfiguration = function (UpgradeConfiguration) {
+            if (this._upgradeConfig !== undefined || this._upgradeConfig !== null)
+                throw new Error('Upgrade Configuration already provided');
+            this._upgradeConfig = UpgradeConfiguration;
+            return this;
+        };
+        DbContextBuilder.prototype.Build = function () {
+            if (this._isCreated)
+                throw new Error('Context is already Build');
+            var that = this;
+            var object = Object.create(null);
+            var container = new IndexedDB.DbContext(this._dbNative, this._dbName);
+            container.Upgrade = this._upgradeConfig;
+            container.ModelBuilding = function (db) {
+                for (var _i = 0, _a = that._models; _i < _a.length; _i++) {
+                    var model = _a[_i];
+                    this.CreateObjectSet(db, model);
+                }
+            };
+            for (var _i = 0, _a = this._models; _i < _a.length; _i++) {
+                var model = _a[_i];
+                object[model.name] = new IndexedDB.BaseRepository(container, model.name);
+            }
+            this._repositories = object;
+            this._isCreated = true;
+            return object;
+        };
+        DbContextBuilder.prototype.GetRepositories = function () {
+            if (!this._isCreated)
+                throw new Error('Please build the DbContext first');
+            return this._repositories;
+        };
+        DbContextBuilder.Debug = function (flag) {
+            IndexedDB.Util.enableDebug = flag;
+        };
+        return DbContextBuilder;
     }());
-    IndexedDB.DbContextConatiner = DbContextConatiner;
-})(IndexedDB || (IndexedDB = {}));
-var IndexedDB;
-(function (IndexedDB) {
-    var DbContextStorageFactory = (function () {
-        function DbContextStorageFactory(dbNative) {
-            this.ContextContainer = new IndexedDB.DbContextConatiner(dbNative);
-        }
-        Object.defineProperty(DbContextStorageFactory.prototype, "Context", {
-            get: function () {
-                return this.ContextContainer.Get();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return DbContextStorageFactory;
-    }());
-    IndexedDB.DbContextStorageFactory = DbContextStorageFactory;
+    IndexedDB.DbContextBuilder = DbContextBuilder;
 })(IndexedDB || (IndexedDB = {}));
 var IndexedDB;
 (function (IndexedDB) {
     var BaseRepository = (function () {
-        function BaseRepository(ObjectStore, StoreName) {
-            this._DBContext = ObjectStore;
+        function BaseRepository(TContext, StoreName) {
+            this._DBContext = TContext;
             this._StoreName = StoreName;
         }
         BaseRepository.prototype.Add = function (TObject) {
@@ -263,16 +274,5 @@ var IndexedDB;
         return BaseRepository;
     }());
     IndexedDB.BaseRepository = BaseRepository;
-})(IndexedDB || (IndexedDB = {}));
-var IndexedDB;
-(function (IndexedDB) {
-    var SampleRepository = (function (_super) {
-        __extends(SampleRepository, _super);
-        function SampleRepository(ObjectStore) {
-            return _super.call(this, ObjectStore, "Sample1") || this;
-        }
-        return SampleRepository;
-    }(IndexedDB.BaseRepository));
-    IndexedDB.SampleRepository = SampleRepository;
 })(IndexedDB || (IndexedDB = {}));
 //# sourceMappingURL=indexedDB.js.map

@@ -52,17 +52,16 @@
         (function (dbConnection) {
             var model = {
                 repository: (function () {
-                    var contextContainer = new IndexedDB.SampleContext(dbConnection);
-                    contextContainer.Upgrade = {
-                        Version: 4,
-                        UpgradeSetting: function (db) {
-                            this.CreateObjectSet(db, { name: "Sample5", keyPath: "id", autoIncrement: true });
-                            this.CreateObjectSet(db, { name: "Sample6", keyPath: "id", autoIncrement: true });
-                            this.CreateObjectSet(db, { name: "Sample9", keyPath: "id", autoIncrement: true });
-                        }
-                    };
-                    console.log(contextContainer);
-                    return new IndexedDB.SampleRepository(contextContainer);
+                    IndexedDB.DbContextBuilder.Debug(false);
+                    var sampleContextBuilder = new IndexedDB.DbContextBuilder(dbConnection);
+                    var repositories = sampleContextBuilder
+                        .CreateDB("Sample")
+                        .ConfigureModel({
+                            name: "Sample",
+                            keyPath: "id",
+                            autoIncrement: false
+                        }).Build();
+                    return repositories.Sample;
                 })()
             };
             var controller = {

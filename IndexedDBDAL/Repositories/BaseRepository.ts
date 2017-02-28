@@ -5,8 +5,8 @@ namespace IndexedDB {
     export class BaseRepository<TDBContext extends IDBContext, TKey extends string | number> implements IRepository<TDBContext, TKey>{
         private _DBContext: TDBContext;
         private _StoreName: string;
-        constructor(ObjectStore: TDBContext, StoreName: string) {
-            this._DBContext = ObjectStore;
+        constructor(TContext: TDBContext, StoreName: string) {
+            this._DBContext = TContext;
             this._StoreName = StoreName;
         }
 
