@@ -14,8 +14,9 @@ sampleContextBuilder.ConfigureModel({
 sampleContextBuilder.Build();
 ```
 
-
-
-
-
+## TODO  
+ * Unit Test for DbContextbuilder and BaseRepository.
+ * Performance measurement and optimization.
+ * Query interface to repository.
+ * Bug-free :)
 
