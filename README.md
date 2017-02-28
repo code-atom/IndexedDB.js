@@ -28,4 +28,4 @@ sampleContextBuilder.Build();
  * Web Worker Support.
  * Create a demo for cache the AJAX response.
  * Service Worker Support.
-
+ * Transaction Scope Work between multiple ObjectStore
