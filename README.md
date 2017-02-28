@@ -1,7 +1,7 @@
 ## IndexedDB.js
 inspired from **[proto-db](https://github.com/jaqmol/proto-db)**. 
 
-## [Demo](https://a-rana.github.io/IndexedDB.js/) 
+## [Demo](https://code-atom.github.io/IndexedDB.js/) 
 
 IndexedDB.js enable you to access the indexed Database feature of browser with promise-api. IndexedDB.js create a repository for each Object store in IndexedDB database.
 
