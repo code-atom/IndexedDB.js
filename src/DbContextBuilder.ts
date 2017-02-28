@@ -6,6 +6,8 @@ namespace IndexedDB {
         _isCreated: boolean = false;
         _repositories: any;
         constructor(private _dbNative: IDBFactory) {
+            if (this._dbNative === undefined || this._dbNative === null)
+                throw new Error('IndexedDB is not supported');
         }
 
         public CreateDB(dbName: string): DbContextBuilder {
@@ -44,6 +46,9 @@ namespace IndexedDB {
             }
             this._repositories = object;
             this._isCreated = true;
+            container.Begin().then(function () {
+                that.Ready();
+            })
             return object;
         }
 
@@ -56,5 +61,7 @@ namespace IndexedDB {
         public static Debug(flag: boolean) {
             Util.enableDebug = flag;
         }
+
+        public Ready : () => void;
     }
 }

@@ -11,6 +11,7 @@ namespace IndexedDB {
         autoIncrement: any,
         indexes?: IIndexConfig[],
         upgradeMapping?: (model: any) => void;
+        seed? : [{}];
     }
     export interface IIndexConfig {
         name: string;

@@ -97,6 +97,12 @@ var IndexedDB;
                         os.createIndex(model.indexes[i].name, model.indexes[i].keyPath, model.indexes[i].options);
                     }
                 }
+                if ((typeof model.seed !== 'undefined') && (model.seed.length > 0)) {
+                    for (var _i = 0, _a = model.seed; _i < _a.length; _i++) {
+                        var data = _a[_i];
+                        os.add(data);
+                    }
+                }
             }
             else {
             }
@@ -148,6 +154,9 @@ var IndexedDB;
             }
             this._repositories = object;
             this._isCreated = true;
+            container.Begin().then(function () {
+                that.Ready();
+            });
             return object;
         };
         DbContextBuilder.prototype.GetRepositories = function () {
@@ -180,7 +189,7 @@ var IndexedDB;
                     promise.reject();
                     IndexedDB.Util.Log("Fail");
                 };
-                transaction.oncomplete = function (event) {
+                request.onsuccess = function (event) {
                     promise.resolve();
                     IndexedDB.Util.Log("success");
                 };
@@ -193,12 +202,12 @@ var IndexedDB;
                 var promise = IndexedDB.Util.CreatePromise();
                 var transaction = db.transaction([self._StoreName], "readwrite");
                 var objectStore = transaction.objectStore(self._StoreName);
-                objectStore.put(TObject);
-                transaction.onerror = function (event) {
+                var request = objectStore.put(TObject);
+                request.onerror = function (event) {
                     promise.reject();
                     IndexedDB.Util.Log("Fail");
                 };
-                transaction.oncomplete = function (event) {
+                request.onsuccess = function (event) {
                     promise.resolve();
                     IndexedDB.Util.Log("success");
                 };
@@ -211,12 +220,12 @@ var IndexedDB;
                 var promise = IndexedDB.Util.CreatePromise();
                 var transaction = db.transaction([self._StoreName], "readwrite");
                 var objectStore = transaction.objectStore(self._StoreName);
-                objectStore.delete(Key);
-                transaction.onerror = function (event) {
+                var request = objectStore.delete(Key);
+                request.onerror = function (event) {
                     promise.reject();
                     IndexedDB.Util.Log("Fail");
                 };
-                transaction.oncomplete = function (event) {
+                request.onsuccess = function (event) {
                     promise.resolve();
                     IndexedDB.Util.Log("success");
                 };
@@ -249,19 +258,20 @@ var IndexedDB;
                 var promise = IndexedDB.Util.CreatePromise();
                 var transaction = db.transaction(self._StoreName, IDBTransaction.READ_ONLY);
                 var objectStore = transaction.objectStore(self._StoreName);
-                objectStore.openCursor().onsuccess = function (evt) {
+                var request = objectStore.openCursor();
+                request.onsuccess = function (evt) {
                     var cursor = evt.target.result;
                     if (cursor) {
                         dbCollection.push(cursor.value);
                         cursor.continue();
                     }
+                    else {
+                        IndexedDB.Util.Log("success");
+                        IndexedDB.Util.Log(dbCollection);
+                        promise.resolve(dbCollection);
+                    }
                 };
-                transaction.oncomplete = function (event) {
-                    IndexedDB.Util.Log("success");
-                    IndexedDB.Util.Log(dbCollection);
-                    promise.resolve(dbCollection);
-                };
-                transaction.onerror = function () {
+                request.onerror = function () {
                     promise.reject();
                     IndexedDB.Util.Log("Fail");
                 };

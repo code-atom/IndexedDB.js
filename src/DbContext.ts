@@ -85,6 +85,11 @@ namespace IndexedDB {
                         os.createIndex(model.indexes[i].name, model.indexes[i].keyPath, model.indexes[i].options);
                     }
                 }
+                if ((typeof model.seed !== 'undefined') && (model.seed.length > 0)) {
+                    for (var data of model.seed) {
+                        os.add(data);
+                    }
+                }
             } else {
 
             }

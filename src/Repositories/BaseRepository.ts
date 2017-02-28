@@ -21,7 +21,7 @@ namespace IndexedDB {
                     promise.reject();
                     Util.Log("Fail");
                 }
-                transaction.oncomplete = (event: any) => {
+                request.onsuccess = (event: any) => {
                     promise.resolve();
                     Util.Log("success");
                 }
@@ -36,12 +36,12 @@ namespace IndexedDB {
                 var promise = Util.CreatePromise();
                 var transaction = db.transaction([self._StoreName], "readwrite");
                 var objectStore = transaction.objectStore(self._StoreName);
-                objectStore.put(TObject);
-                transaction.onerror = (event: any) => {
+                var request = objectStore.put(TObject);
+                request.onerror = (event: any) => {
                     promise.reject();
                     Util.Log("Fail");
                 }
-                transaction.oncomplete = (event: any) => {
+                request.onsuccess = (event: any) => {
                     promise.resolve();
                     Util.Log("success");
                 }
@@ -56,12 +56,12 @@ namespace IndexedDB {
                 var promise = Util.CreatePromise();
                 var transaction = db.transaction([self._StoreName], "readwrite");
                 var objectStore = transaction.objectStore(self._StoreName);
-                objectStore.delete(Key);
-                transaction.onerror = (event: any) => {
+                var request = objectStore.delete(Key);
+                request.onerror = (event: any) => {
                     promise.reject();
                     Util.Log("Fail");
                 }
-                transaction.oncomplete = (event: any) => {
+                request.onsuccess = (event: any) => {
                     promise.resolve();
                     Util.Log("success");
                 }
@@ -96,19 +96,19 @@ namespace IndexedDB {
                 var promise = Util.CreatePromise();
                 var transaction = db.transaction(self._StoreName, IDBTransaction.READ_ONLY);
                 var objectStore = transaction.objectStore(self._StoreName);
-                objectStore.openCursor().onsuccess = function (evt: any) {
+                var request = objectStore.openCursor();
+                request.onsuccess = function (evt: any) {
                     var cursor = evt.target.result;
                     if (cursor) {
                         dbCollection.push(cursor.value);
                         cursor.continue()
+                    } else {
+                        Util.Log("success");
+                        Util.Log(dbCollection);
+                        promise.resolve(dbCollection);
                     }
                 };
-                transaction.oncomplete = (event: any) => {
-                    Util.Log("success");
-                    Util.Log(dbCollection);
-                    promise.resolve(dbCollection);
-                }
-                transaction.onerror = function () {
+                request.onerror = function () {
                     promise.reject();
                     Util.Log("Fail");
                 };
