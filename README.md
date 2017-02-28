@@ -19,4 +19,8 @@ sampleContextBuilder.Build();
  * Performance measurement and optimization.
  * Query interface to repository.
  * Bug-free :)
+ * Single Connection Oriented.
+ * Web Worker Support.
+ * Create a demo for cache the AJAX response.
+ * Service Worker Support.
 
