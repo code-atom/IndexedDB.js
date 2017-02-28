@@ -18,6 +18,7 @@ sampleContextBuilder.Build();
 ```
 
 ## TODO  
+ * Avaiability check
  * Seeding with new created ObjectStore
  * Unit Test for DbContextbuilder and BaseRepository.
  * Performance measurement and optimization.
