@@ -15,8 +15,13 @@ sampleContextBuilder.Build();
 ```
 
 ## TODO  
+ * Seeding with new created ObjectStore
  * Unit Test for DbContextbuilder and BaseRepository.
  * Performance measurement and optimization.
  * Query interface to repository.
  * Bug-free :)
+ * Single Connection Oriented.
+ * Web Worker Support.
+ * Create a demo for cache the AJAX response.
+ * Service Worker Support.
 
