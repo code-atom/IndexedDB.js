@@ -2,51 +2,54 @@
 <html lang="en">
 
 <head>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <style type="text/css">
-
-    </style>
-    <!--https://github.com/jaqmol/proto-db-->
-    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
+    <title>IndexedDB.js | Demo</title>
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue-light_blue.min.css" />
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+     <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
         crossorigin="anonymous"></script>
-        <script src="./build/indexedDB.js"></script>
+    <style>
+        body {
+            background: #ccc;
+            color: #fff;
+        }
+    </style>
+    <script src="./build/indexedDB.js"></script>
 </head>
 
 <body>
-    <div class="main-container">
-        <div class="container">
-            <div class="row">
-                <h2 class="text-center">To-Do List</h2>
-            </div>
-            <div class="row">
-                <div class="col-md-5 col-md-offset-4">
-                    <form class="form-inline">
-                        <div class="form-group">
-                            <input type="text" class="form-control" id="val">
-                        </div>
-                        <button id="add" class="btn btn-default" type="button">Add Data</button>
-                    </form>
-                    <!--<button id="load" class="btn btn-default">Load Data</button>-->
+    <div class="mdl-grid" style="margin: 0 auto;">
+        <div class="mdl-cell mdl-cell--12-col">
+            <h3 style="text-align: center">TODO Task</h3>
+        </div>
+    </div>
+    <div class="mdl-grid" style="margin: 0 auto;">
+        <div class="mdl-cell mdl-cell--12-col">
+            <div class="mdl-card  mdl-shadow--2dp" style="min-height: auto;margin: 0 auto;width:410px">
+                <div class="mdl-card__supporting-text">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input" type="text" id="val">
+                        <label class="mdl-textfield__label" for="val">Add Task ...</label>
+                    </div>
+                    <button id ="add"class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" style="vertical-align: super;color:#fff">Add</button>
                 </div>
-            </div>
-            <div class="row  col-md-4 col-md-offset-4">
-                <h6 class="text-center"> List of ToDo Task</h6>
-
-                <ul id="task-container" class="text-center list-group">
-
-                </ul>
             </div>
         </div>
     </div>
-    <script id="listTemplate" type="text/template">
-        <li>
-            <div class="checkbox">
-                <label>
-                <input type="checkbox" value="">
-                {{Text}} {{CreatedAt}}
-            </label>
+    <div class="mdl-grid" style="margin: 0 auto;">
+        <div class="mdl-cell mdl-cell--12-col" id ="task-container">
+        </div>
+    </div>
+    <script type="text/template" id="task-template">
+        <div class="mdl-card  mdl-shadow--2dp" style="min-height: auto;margin: 0 auto;width:410px;margin-bottom: 0.5%">
+            <div class="mdl-card__supporting-text">
+                <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="{{ID}}">
+                        <input type="checkbox" id="{{ID}}" class="mdl-checkbox__input" >
+                        <span class="mdl-checkbox__label">{{Checkbox}}</span>
+                    </label>
             </div>
-            <li>
+        </div>
     </script>
     <script type="text/javascript">
         (function (dbConnection) {
@@ -85,9 +88,7 @@
             var view = {
                 init: function () {
                     this.$container = $('#task-container');
-                    $('#load').click(function () {
-                        controller.readAll();
-                    })
+                    this.$taskTemplate = $('#task-template').html();
                     $('#add').click(function () {
                         var val = $('#val').val();
                         var obj = { id: Date.now(), value: val };
@@ -99,15 +100,10 @@
                 render: function (data) {
                     $(view.$container).html('');
                     for (var d of data) {
-                        var li = $(document.createElement('li'));
-                        li.attr('id', d.id);
-                        li.addClass('list-group-item')
-                        li.text(d.value);
-                        li.click(function () {
-                            controller.remove(d.id);
-                        })
-                        var li = $(view.$container).append(li);
+                        var str  = view.$taskTemplate.replace(/{{Checkbox}}/g, d.value).replace(/{{ID}}/g, d.id);
+                        $(view.$container).append(str);
                     }
+                    componentHandler.upgradeDom();
                 }
             }
 
