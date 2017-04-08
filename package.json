@@ -1,0 +1,30 @@
+{
+  "name": "indexeddb.js",
+  "version": "1.0.0",
+  "description": "Repository style access to indexedDB",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/A-Rana/IndexedDBRepository.git"
+  },
+  "keywords": [
+    "indexedDB",
+    "promise-api",
+    "javascript"
+  ],
+  "author": "Ankit Rana",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/A-Rana/IndexedDBRepository/issues"
+  },
+  "homepage": "https://github.com/A-Rana/IndexedDBRepository#readme",
+  "devDependencies": {
+    "fake-indexeddb": "^1.0.11",
+    "jasmine": "^2.5.3"
+  }
+}

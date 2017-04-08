@@ -2,6 +2,7 @@ namespace IndexedDB {
     export class DbContextBuilder {
         _dbName: string;
         _models: IModelConfig[] = [];
+        _modelNames: string[];
         _upgradeConfig: IDBUpgradeConfiguration;
         _isCreated: boolean = false;
         _repositories: any;
@@ -43,12 +44,21 @@ namespace IndexedDB {
             }
             for (var model of this._models) {
                 object[model.name] = new BaseRepository(container, model.name);
+                this._modelNames.push(model.name);
             }
             this._repositories = object;
             this._isCreated = true;
-            container.Begin().then(function () {
+            object.BeginTransaction = function (scope: UnitOfWorkOption): Promise<any> {
+                var promise = Util.CreatePromise();
+                var unitOfWork = new UnitOfWork(container, that._modelNames);
+                unitOfWork.Begin(scope, function (repository) {
+                    promise.resolve(repository);
+                });
+                return promise;
+            };
+            container.Begin().then(function (db: IDBDatabase) {
                 that.Ready();
-            })
+            });
             return object;
         }
 
@@ -62,6 +72,8 @@ namespace IndexedDB {
             Util.enableDebug = flag;
         }
 
-        public Ready : () => void;
+
+
+        public Ready: () => void;
     }
 }
