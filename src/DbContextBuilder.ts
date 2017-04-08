@@ -9,6 +9,7 @@ namespace IndexedDB {
         constructor(private _dbNative: IDBFactory) {
             if (this._dbNative === undefined || this._dbNative === null)
                 throw new Error('IndexedDB is not supported');
+            this._modelNames = [];
         }
 
         public CreateDB(dbName: string): DbContextBuilder {
