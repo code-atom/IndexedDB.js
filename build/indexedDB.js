@@ -118,8 +118,6 @@ var IndexedDB;
             this._dbNative = _dbNative;
             this._models = [];
             this._isCreated = false;
-            if (this._dbNative === undefined || this._dbNative === null)
-                throw new Error('IndexedDB is not supported');
         }
         DbContextBuilder.prototype.CreateDB = function (dbName) {
             this._dbName = dbName;
@@ -153,19 +151,10 @@ var IndexedDB;
             for (var _i = 0, _a = this._models; _i < _a.length; _i++) {
                 var model = _a[_i];
                 object[model.name] = new IndexedDB.BaseRepository(container, model.name);
-                this._modelNames.push(model.name);
             }
             this._repositories = object;
             this._isCreated = true;
-            object.BeginTransaction = function (scope) {
-                var promise = IndexedDB.Util.CreatePromise();
-                var unitOfWork = new IndexedDB.UnitOfWork(container, that._modelNames);
-                unitOfWork.Begin(scope, function (repository) {
-                    promise.resolve(repository);
-                });
-                return promise;
-            };
-            container.Begin().then(function (db) {
+            container.Begin().then(function () {
                 that.Ready();
             });
             return object;
@@ -295,119 +284,5 @@ var IndexedDB;
         return BaseRepository;
     }());
     IndexedDB.BaseRepository = BaseRepository;
-})(IndexedDB || (IndexedDB = {}));
-var IndexedDB;
-(function (IndexedDB) {
-    var Repository = (function () {
-        function Repository(Store, StoreName) {
-            this._Store = Store;
-            this._StoreName = StoreName;
-        }
-        Repository.prototype.Add = function (TObject) {
-            var promise = IndexedDB.Util.CreatePromise();
-            var request = this._Store.add(TObject);
-            request.onerror = function (event) {
-                promise.reject();
-                IndexedDB.Util.Log("Fail");
-            };
-            request.onsuccess = function (event) {
-                promise.resolve();
-                IndexedDB.Util.Log("success");
-            };
-            return promise;
-        };
-        Repository.prototype.Update = function (TObject) {
-            var promise = IndexedDB.Util.CreatePromise();
-            var request = this._Store.put(TObject);
-            request.onerror = function (event) {
-                promise.reject();
-                IndexedDB.Util.Log("Fail");
-            };
-            request.onsuccess = function (event) {
-                promise.resolve();
-                IndexedDB.Util.Log("success");
-            };
-            return promise;
-        };
-        Repository.prototype.Delete = function (Key) {
-            var promise = IndexedDB.Util.CreatePromise();
-            var request = this._Store.delete(Key);
-            request.onerror = function (event) {
-                promise.reject();
-                IndexedDB.Util.Log("Fail");
-            };
-            request.onsuccess = function (event) {
-                promise.resolve();
-                IndexedDB.Util.Log("success");
-            };
-            return promise;
-        };
-        Repository.prototype.Get = function (TKey) {
-            var promise = IndexedDB.Util.CreatePromise();
-            var retrievalRequest = this._Store.get(TKey);
-            retrievalRequest.onsuccess = function (evt) {
-                var data = evt.target.result;
-                IndexedDB.Util.Log("successfully");
-                promise.resolve(data);
-            };
-            retrievalRequest.onerror = function () {
-                promise.reject();
-                IndexedDB.Util.Log("Fail");
-            };
-            return promise;
-        };
-        Repository.prototype.GetAll = function () {
-            var dbCollection = [];
-            var promise = IndexedDB.Util.CreatePromise();
-            var request = this._Store.openCursor();
-            request.onsuccess = function (evt) {
-                var cursor = evt.target.result;
-                if (cursor) {
-                    dbCollection.push(cursor.value);
-                    cursor.continue();
-                }
-                else {
-                    IndexedDB.Util.Log("success");
-                    IndexedDB.Util.Log(dbCollection);
-                    promise.resolve(dbCollection);
-                }
-            };
-            request.onerror = function () {
-                promise.reject();
-                IndexedDB.Util.Log("Fail");
-            };
-            return promise;
-        };
-        return Repository;
-    }());
-    IndexedDB.Repository = Repository;
-})(IndexedDB || (IndexedDB = {}));
-var IndexedDB;
-(function (IndexedDB) {
-    var UnitOfWork = (function () {
-        function UnitOfWork(DbContext, models) {
-            this._DbContext = DbContext;
-            this._models = models;
-        }
-        UnitOfWork.prototype.Begin = function (option, callback) {
-            var self = this;
-            this._DbContext
-                .Begin()
-                .then(function (db) {
-                var object = Object.create(null);
-                var transaction = db.transaction(self._models, option);
-                for (var _i = 0, _a = this._models; _i < _a.length; _i++) {
-                    var model = _a[_i];
-                    var objectStore = transaction.objectStore(model);
-                    object[model] = new IndexedDB.Repository(objectStore, model);
-                }
-                if (!callback)
-                    throw new Error('specify the scope callback function');
-                callback(object);
-            });
-        };
-        return UnitOfWork;
-    }());
-    IndexedDB.UnitOfWork = UnitOfWork;
 })(IndexedDB || (IndexedDB = {}));
 //# sourceMappingURL=indexedDB.js.map
